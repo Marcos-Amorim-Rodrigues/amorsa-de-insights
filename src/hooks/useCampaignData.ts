@@ -78,8 +78,8 @@ export function useCampaignData() {
   }, [filteredData]);
 
   const campaignTrends: CampaignTrend[] = useMemo(() => {
-    return getCampaignTrends(rawData);
-  }, [rawData]);
+    return getCampaignTrends(filteredData, dateRange.to);
+  }, [filteredData, dateRange.to]);
 
   const availableDateRange = useMemo(() => {
     if (rawData.length === 0) return null;

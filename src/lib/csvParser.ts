@@ -169,10 +169,18 @@ export interface CampaignTrend {
   cpa30d: number;
 }
 
-export function getCampaignTrends(data: CampaignData[]): CampaignTrend[] {
-  const data7d = getLastNDays(data, 7);
-  const data14d = getLastNDays(data, 14);
-  const data30d = getLastNDays(data, 30);
+export function getCampaignTrends(data: CampaignData[], referenceDate?: Date): CampaignTrend[] {
+  const endDate = referenceDate || new Date();
+  
+  const getDataForDays = (days: number) => {
+    const startDate = new Date(endDate);
+    startDate.setDate(endDate.getDate() - days);
+    return filterByDateRange(data, startDate, endDate);
+  };
+  
+  const data7d = getDataForDays(7);
+  const data14d = getDataForDays(14);
+  const data30d = getDataForDays(30);
   
   const campaigns = new Set<string>();
   data.forEach(item => {
@@ -190,7 +198,7 @@ export function getCampaignTrends(data: CampaignData[]): CampaignTrend[] {
     const agg14d = aggregateMetrics(filter14d);
     const agg30d = aggregateMetrics(filter30d);
     
-    if (agg30d.totalSpend > 0) {
+    if (agg30d.totalSpend > 0 || agg14d.totalSpend > 0 || agg7d.totalSpend > 0) {
       trends.push({
         campaignName,
         cost7d: agg7d.totalSpend,
