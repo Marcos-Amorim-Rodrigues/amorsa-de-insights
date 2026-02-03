@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { CalendarIcon } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
+import { DateRange as DayPickerDateRange } from 'react-day-picker';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
@@ -14,6 +16,12 @@ interface DateFilterProps {
 }
 
 export function DateFilter({ dateRange, onDateRangeChange, availableDateRange }: DateFilterProps) {
+  const [selectedRange, setSelectedRange] = useState<DayPickerDateRange | undefined>({
+    from: dateRange.from,
+    to: dateRange.to,
+  });
+  const [isOpen, setIsOpen] = useState(false);
+
   const presets = [
     { label: '7 dias', days: 7 },
     { label: '14 dias', days: 14 },
@@ -25,7 +33,17 @@ export function DateFilter({ dateRange, onDateRangeChange, availableDateRange }:
     const to = new Date();
     const from = new Date();
     from.setDate(to.getDate() - days);
-    onDateRangeChange({ from, to });
+    const newRange = { from, to };
+    setSelectedRange(newRange);
+    onDateRangeChange(newRange);
+  };
+
+  const handleSelect = (range: DayPickerDateRange | undefined) => {
+    setSelectedRange(range);
+    if (range?.from && range?.to) {
+      onDateRangeChange({ from: range.from, to: range.to });
+      setIsOpen(false);
+    }
   };
 
   return (
@@ -48,7 +66,7 @@ export function DateFilter({ dateRange, onDateRangeChange, availableDateRange }:
       
       <div className="h-6 w-px bg-border/50" />
       
-      <Popover>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button
             variant="outline"
@@ -66,12 +84,8 @@ export function DateFilter({ dateRange, onDateRangeChange, availableDateRange }:
             initialFocus
             mode="range"
             defaultMonth={dateRange.from}
-            selected={{ from: dateRange.from, to: dateRange.to }}
-            onSelect={(range) => {
-              if (range?.from && range?.to) {
-                onDateRangeChange({ from: range.from, to: range.to });
-              }
-            }}
+            selected={selectedRange}
+            onSelect={handleSelect}
             numberOfMonths={2}
             disabled={(date) => {
               if (!availableDateRange) return false;
